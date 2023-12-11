@@ -1,0 +1,99 @@
+
+// Aura Black Edition
+// Developer: Forex Robot Easy Team
+// Developer's Site: forexroboteasy.com
+
+#include <Trade\Trade.mqh>
+#include <Neuro\FeedforwardNeuralNetwork.mqh>
+
+// Define constants
+#define SYMBOL 'XAUUSD'
+#define LOT_SIZE 0.1
+#define MAX_POSITIONS 5
+
+// Create instances of required classes
+CTrade trade;
+CFeedforwardNeuralNetwork neuralNetwork;
+
+// Define trading function
+void TradeGold()
+{
+   // Check market conditions
+   if(neuralNetwork.CheckMarketConditions())
+   {
+      // Calculate stop loss and take profit levels
+      double stopLoss = trade.CalculateStopLoss(SYMBOL);
+      double takeProfit = trade.CalculateTakeProfit(SYMBOL);
+
+      // Open position
+      trade.OpenPosition(SYMBOL, LOT_SIZE, stopLoss, takeProfit);
+
+      // Adjust trading strategy based on market conditions
+      neuralNetwork.AdjustTradingStrategy();
+
+      // Check if maximum number of positions reached
+      if(trade.GetOpenPositionsCount() >= MAX_POSITIONS)
+      {
+         // Close oldest position
+         trade.CloseOldestPosition();
+      }
+   }
+}
+
+// Define risk management function
+void ManageRisk()
+{
+   // Calculate position size based on account balance and desired risk
+   double accountBalance = trade.GetAccountBalance();
+   double positionSize = trade.CalculatePositionSize(accountBalance);
+
+   // Set leverage control
+   trade.SetLeverageControl(positionSize);
+}
+
+// Define trade execution function
+void ExecuteTrades()
+{
+   // Get trade signals from neural network
+   bool entrySignal = neuralNetwork.GetEntrySignal();
+   bool exitSignal = neuralNetwork.GetExitSignal();
+
+   // Handle trade entry signal
+   if(entrySignal)
+   {
+      // Execute trade entry
+      TradeGold();
+   }
+
+   // Handle trade exit signal
+   if(exitSignal)
+   {
+      // Close all open positions
+      trade.CloseAllPositions();
+   }
+}
+
+// Define account monitoring function
+void MonitorAccount()
+{
+   // Get account balance and equity
+   double accountBalance = trade.GetAccountBalance();
+   double accountEquity = trade.GetAccountEquity();
+
+   // Output account information
+   Print('Account Balance: ', accountBalance);
+   Print('Account Equity: ', accountEquity);
+}
+
+// Define the main function
+void OnTick()
+{
+   // Manage risk
+   ManageRisk();
+
+   // Execute trades
+   ExecuteTrades();
+
+   // Monitor account
+   MonitorAccount();
+}
